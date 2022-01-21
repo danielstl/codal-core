@@ -99,7 +99,7 @@ namespace codal
 		// read/write/creat flags.
 		uint16_t flags;
 
-		// FileDescriptor id
+		// FileDescriptor id.
 		uint16_t id;
 
 		// current file position, in bytes.
@@ -129,7 +129,7 @@ namespace codal
 	  * - seek()
 	  * - remove()
 	  *
-	  * Only a single instance shoud exist at any given time.
+	  * Only a single instance should exist at any given time.
 	  */
 	class CodalFS
 	{
@@ -194,7 +194,7 @@ namespace codal
 
 
 		/**
-		* Retrieve the DirectoryEntry assoiated with the given file's DIRECTORY (not the file itself).
+		* Retrieve the DirectoryEntry associated with the given file's DIRECTORY (not the file itself).
 		*
 		* @param filename A fully qualified filename, from the root.
 		* @return the logical address of the DirectoryEntry for the given file's directory, or NULL if no entry is found.
@@ -205,7 +205,7 @@ namespace codal
 		* Retrieve the DirectoryEntry for the given filename.
 		*
 		* @param filename A fully or partially qualified filename.
-		* @param directory The directory to search. If ommitted, the root directory will be used.
+		* @param directory The directory to search. If omitted, the root directory will be used.
 		* @return the logical address of the DirectoryEntry for the given file, or NULL if no entry is found.
 		*/
 		uint32_t getDirectoryEntry(char const * filename, const DirectoryEntry *directory = NULL);
@@ -217,15 +217,15 @@ namespace codal
 		* @param directory The directory in which to create the entry
 		* @param isDirectory true if the entry being created is itself a directory
 		*
-		* @return The logical address od the new DirectoryEntry for the given file, or NULL if it was not possible to allocated resources.
+		* @return The logical address of the new DirectoryEntry for the given file, or NULL if it was not possible to allocate resources.
 		*/
 		uint32_t createFile(char const * filename, DirectoryEntry *directory, bool isDirectory);
 
 		/**
-		* Allocate a free DiretoryEntry in the given directory, extending and refreshing the directory block if necessary.
+		* Allocate a free DirectoryEntry in the given directory, extending and refreshing the directory block if necessary.
 		*
 		* @param directory The directory to add a DirectoryEntry to
-		* @return The logical address of the new DirectoryEntry for the given file, or 0 if it was not possible to allocated resources.
+		* @return The logical address of the new DirectoryEntry for the given file, or 0 if it was not possible to allocate resources.
 		*/
 		uint32_t createDirectoryEntry(DirectoryEntry *directory);
 
@@ -281,7 +281,7 @@ namespace codal
 		/**
 		 * Determines the logical memory address associated with the start of the given block
 		 * @param block A valid block number.
-		 * @return the logival addresses of the start of the given block.
+		 * @return the logical addresses of the start of the given block.
 		 */
 		uint32_t addressOfBlock(uint16_t block);
 
@@ -297,7 +297,7 @@ namespace codal
 		/**
 		* Determine the logical block that contains the given address.
 		*
-		* @param address A valid logival address within the file system space.
+		* @param address A valid logical address within the file system space.
 		*
 		* @return The block number containing the given address.
 		*/
@@ -322,7 +322,7 @@ namespace codal
 		/**
 		* Searches the list of open files for one with the given identifier.
 		*
-		* @param fd A previsouly opened file identifier, as returned by open().
+		* @param fd A previously opened file identifier, as returned by open().
 		* @param remove Remove the file descriptor from the list if true.
 		* @return A FileDescriptor matching the given ID, or NULL if the file is not open.
 		*/
@@ -341,11 +341,11 @@ namespace codal
 
 		/**
 		 * Determines if the given filename is a valid filename for use in CodalFS.
-		 * valid filenames must be >0 characters in lenght, NULL temrinated and contain
+		 * valid filenames must be >0 characters in length, NULL terminated and contain
 		 * only printable characters.
 		 *
 		 * @param name The name of the file to test.
-		 * @return true if the filename is valid, false otherwsie.
+		 * @return true if the filename is valid, false otherwise.
 		 */
 		bool isValidFilename(const char *name);
 
@@ -444,7 +444,7 @@ namespace codal
 		  * @param offset new offset, can be positive/negative.
 		  * @param flags
 		  * @return new offset position on success, DEVICE_NOT_SUPPORTED if the file system
-		  *         is not intiialised, DEVICE_INVALID_PARAMETER if the flag given is invalid
+		  *         is not initialised, DEVICE_INVALID_PARAMETER if the flag given is invalid
 		  *         or the file handle is invalid.
 		  *
 		  * @code
