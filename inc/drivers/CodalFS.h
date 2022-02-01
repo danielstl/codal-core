@@ -67,6 +67,7 @@ DEALINGS IN THE SOFTWARE.
 #define CODALFS_INVALID_ADDRESS			  	 0xffffffff
 #define CODALFS_DIRECTORY_LENGTH			 0x0f000000
 #define CODALFS_DIRECTORY_SEPARATOR			 '/'
+#define CODALFS_DIRECTORY_SEPARATOR_STR		 "/"
 
 namespace codal
 {
@@ -343,7 +344,8 @@ namespace codal
 		/**
 		 * Determines if the given filename is a valid filename for use in CodalFS.
 		 * valid filenames must be >0 characters in length, NULL terminated and contain
-		 * only printable characters.
+		 * only printable characters. Each directory component within this string must
+		 * not have a length > CODALFS_FILENAME_LENGTH
 		 *
 		 * @param name The name of the file to test.
 		 * @return true if the filename is valid, false otherwise.

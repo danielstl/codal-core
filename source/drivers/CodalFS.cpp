@@ -259,7 +259,7 @@ uint32_t CodalFS::getDirectoryEntry(char const *filename, const DirectoryEntry *
 
     // Determine the filename from the (potentially) fully qualified filename.
     file = filename + strlen(filename);
-    while (file >= filename && *file != '/')
+    while (file >= filename && *file != CODALFS_DIRECTORY_SEPARATOR)
         file--;
     file++;
 
@@ -410,7 +410,7 @@ uint32_t CodalFS::getDirectoryOf(char const *filename)
     uint32_t directoryAddress;
 
     // If no path is provided, return the root directory.
-    if (filename == NULL || filename[0] == 0 || (filename[0] == '/' && filename[1] == 0))
+    if (filename == NULL || filename[0] == 0 || (filename[0] == CODALFS_DIRECTORY_SEPARATOR && filename[1] == 0))
         return fileSystemTableSize * blockSize;
 
     char s[CODALFS_FILENAME_LENGTH + 1];
@@ -422,7 +422,7 @@ uint32_t CodalFS::getDirectoryOf(char const *filename)
 
     while (*filename != '\0')
     {
-        if (*filename == '/')
+        if (*filename == CODALFS_DIRECTORY_SEPARATOR)
         {
             s[i] = '\0';
 
@@ -789,7 +789,7 @@ uint32_t CodalFS::createFile(char const *filename, DirectoryEntry *directory, bo
 
     // Determine the filename from the (potentially) fully qualified filename.
     file = filename + strlen(filename);
-    while (file >= filename && *file != '/')
+    while (file >= filename && *file != CODALFS_DIRECTORY_SEPARATOR)
         file--;
     file++;
 
@@ -973,7 +973,7 @@ int CodalFS::open(char const *filename, uint32_t flags)
     dirent = (DirectoryEntry *)getCachedData(direntAddress);
 
     // Special case for the root directory (as it has no parent)
-    if (strcmp(filename, "/") == 0)
+    if (strcmp(filename, CODALFS_DIRECTORY_SEPARATOR_STR) == 0)
     {
         direntAddress = directoryAddress;
         dirent = directory;
@@ -1355,20 +1355,41 @@ int CodalFS::writeBuffer(FileDescriptor *file, uint8_t *buffer, int size)
 
 /**
  * Determines if the given filename is a valid filename for use in CodalFS.
- * valid filenames must be between 1 and CODALFS_FILENAME_LENGTH characters in length, NULL
- * terminated and contain only printable characters.
+ * valid filenames must be >0 characters in length, NULL terminated and contain
+ * only printable characters. Each directory component within this string must
+ * not have a length > CODALFS_FILENAME_LENGTH
  *
  * @param name The name of the file to test.
  * @return true if the filename is valid, false otherwise.
  */
 bool CodalFS::isValidFilename(const char *name)
 {
-    if (name == NULL || strlen(name) == 0 || strlen(name) > CODALFS_FILENAME_LENGTH)
+    if (name == NULL || strlen(name) == 0)
         return false;
 
-    for (unsigned int i=0; i<strlen(name); i++)
-        if(name[i] < 32 || name[i] > 126) 
+    int currentDirectoryLength = 0;
+
+    for (unsigned int i = 0; i < strlen(name); i++)
+    {
+        currentDirectoryLength++;
+
+        if (name[i] < 32 || name[i] > 126)
+        {
             return false;
+        }
+
+        if (name[i] == CODALFS_DIRECTORY_SEPARATOR) {
+            if (currentDirectoryLength == 0) {
+                return false; // There shouldn't be duplicate separators (//)
+            }
+
+            currentDirectoryLength = 0;
+        }
+
+        if (currentDirectoryLength > CODALFS_FILENAME_LENGTH) {
+            return false; // One component of this filename is too long
+        }
+    }
 
     return true;
 }
