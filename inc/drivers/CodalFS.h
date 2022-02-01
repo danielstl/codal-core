@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 #include "CodalCompat.h"
 
 // Configuration options.
-#define CODALFS_FILENAME_LENGTH        16        
+#define CODALFS_FILENAME_LENGTH        16
 #define CODALFS_MAGIC                  "CODAL_FS_1_0"
 
 // open() flags.
@@ -66,6 +66,7 @@ DEALINGS IN THE SOFTWARE.
 // OTHER CONSTANTS
 #define CODALFS_INVALID_ADDRESS			  	 0xffffffff
 #define CODALFS_DIRECTORY_LENGTH			 0x0f000000
+#define CODALFS_DIRECTORY_SEPARATOR			 '/'
 
 namespace codal
 {
@@ -108,10 +109,10 @@ namespace codal
 		// the current file size. n.b. this may be different to that stored in the DirectoryEntry.
 		uint32_t length;
 
-		// the logical address of the directory entry for this file. 
+		// the logical address of the directory entry for this file.
 		uint32_t dirent;
 
-		// the directory entry of our parent directory. 
+		// the directory entry of our parent directory.
 		uint32_t directory;
 
 		// We maintain a chain of open file descriptors. Reference to the next FileDescriptor in the chain.
@@ -537,7 +538,10 @@ namespace codal
 		int format();
 
 		void debug_print_root_dirent();
-	};
+
+        void debug_print_directory(const char * directoryName);
+        void debug_print_directory(DirectoryEntry* directory, int levelsDeep);
+        };
 
 }
 #endif
