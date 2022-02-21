@@ -180,4 +180,14 @@ void codal_vdmesg(const char *format, bool crlf, va_list ap)
         logwrite("\r\n");
 }
 
+void codal_vdmesg_raw(const char *format, bool crlf, int length)
+{
+    logwriten(format, length);
+
+    if (crlf)
+        logwrite("\r\n");
+
+    codal_dmesg_flush();
+}
+
 #endif

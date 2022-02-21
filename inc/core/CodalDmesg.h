@@ -75,10 +75,12 @@ void codal_dmesg_set_flush_fn(void (*fn)(void));
 void codal_dmesg_flush();
 
 void codal_vdmesg(const char *format, bool crlf, va_list ap);
+void codal_vdmesg_raw(const char *format, bool crlf, int length);
 
 #define DMESG   codal_dmesg
 #define DMESGN  codal_dmesg_nocrlf
 #define DMESGF  codal_dmesg_with_flush
+#define DMESGR  codal_vdmesg_raw
 
 #ifdef __cplusplus
 }

@@ -51,7 +51,7 @@ DEALINGS IN THE SOFTWARE.
 #define CODALFS_EOF                          0xEFFF
 #define CODALFS_DELETED                      0x0000
 
-// DirectorEntry flags
+// DirectoryEntry flags
 #define CODALFS_DIRECTORY_ENTRY_FREE         0x8000
 #define CODALFS_DIRECTORY_ENTRY_VALID        0x4000
 #define CODALFS_DIRECTORY_ENTRY_DIRECTORY    0x2000
@@ -68,6 +68,8 @@ DEALINGS IN THE SOFTWARE.
 #define CODALFS_DIRECTORY_LENGTH			 0x0f000000
 #define CODALFS_DIRECTORY_SEPARATOR			 '/'
 #define CODALFS_DIRECTORY_SEPARATOR_STR		 "/"
+
+#define CODALFS_OFFSET                       4096 // Byte offset to account for the HTML header
 
 namespace codal
 {
@@ -543,6 +545,8 @@ namespace codal
 
         void debug_print_directory(const char * directoryName);
         void debug_print_directory(DirectoryEntry* directory, int levelsDeep);
+
+        const static uint8_t header[2048];
         };
 
 }
