@@ -17,6 +17,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
+#include <CodalFS.h>
 #include "stdafx.h"
 #include "VSGlue.h"
 
@@ -66,6 +67,8 @@ void FSCache::clear()
 */
 int FSCache::erase(uint32_t address)
 {
+    address += CODALFS_OFFSET;
+
 	CacheEntry *c = getCacheEntry(address);
 
 	// Erase the page in our cache (if it is present)
@@ -84,6 +87,8 @@ int FSCache::erase(uint32_t address)
 */
 int FSCache::read(uint32_t address, const void *data, int len)
 {
+    address += CODALFS_OFFSET;
+
 	int bytesCopied = 0;
 
 	// Ensure that the operation is within the limits of the device
@@ -97,7 +102,7 @@ int FSCache::read(uint32_t address, const void *data, int len)
 		uint32_t block = (a / blockSize) *blockSize;
 		uint32_t offset = a % blockSize;
 		uint32_t l = min(len - bytesCopied, blockSize - offset);
-		CacheEntry *c = cachePage(block);
+		CacheEntry *c = cachePage(block - CODALFS_OFFSET); // todo: check offset
 
 		memcpy((uint8_t *)data + bytesCopied, c->page + offset, l);
 		bytesCopied += l;
@@ -116,6 +121,12 @@ int FSCache::read(uint32_t address, const void *data, int len)
 */
 int FSCache::write(uint32_t address, const void *data, int len)
 {
+    if (address < CODALFS_OFFSET) {
+        DMESGF("Write to %d", address);
+    }
+
+    address += CODALFS_OFFSET;
+
 	int bytesCopied = 0;
 
 	// Ensure that the operation is within the limits of the device
@@ -130,7 +141,7 @@ int FSCache::write(uint32_t address, const void *data, int len)
 		uint32_t block = (a / blockSize) *blockSize;
 		uint32_t offset = a % blockSize;
 		uint32_t l = min(len - bytesCopied, blockSize - offset);
-		CacheEntry *c = cachePage(block);
+		CacheEntry *c = cachePage(block - CODALFS_OFFSET);
 
 		// Validate that a write operation can be performed without needing an erase cycle.
 		for (uint32_t i = 0; i < l; i++)
@@ -140,7 +151,7 @@ int FSCache::write(uint32_t address, const void *data, int len)
 
 			if ((b1 ^ b2) & b2)
 			{
-				DMESG("FS_CACHE: ILLEGAL WRITE OPERAITON ATTEMPTED [ADDRESS: %p] [LENGTH: %d]\n", address, len);
+				DMESG("FS_CACHE: ILLEGAL WRITE OPERATION ATTEMPTED [ADDRESS: %p] [LENGTH: %d]\n", address, len);
 				debug(c);
 				return DEVICE_NOT_SUPPORTED;
 			}
@@ -159,7 +170,7 @@ int FSCache::write(uint32_t address, const void *data, int len)
 		uint32_t block = (a / blockSize) *blockSize;
 		uint32_t offset = a % blockSize;
 		uint32_t l = min(len - bytesCopied, blockSize - offset);
-		CacheEntry *c = cachePage(block);
+		CacheEntry *c = cachePage(block - CODALFS_OFFSET);
 
 		uint32_t alignedStart = a & 0xFFFFFFFC;
 		uint32_t alignedEnd = (a + l) & 0xFFFFFFFC;
@@ -184,6 +195,8 @@ int FSCache::write(uint32_t address, const void *data, int len)
 */
 int FSCache::pin(uint32_t address)
 {
+    address += CODALFS_OFFSET;
+
 	CacheEntry *c = cachePage(address);
 
 	if (c)
@@ -200,6 +213,8 @@ int FSCache::pin(uint32_t address)
 */
 int FSCache::unpin(uint32_t address)
 {
+    address += CODALFS_OFFSET;
+
 	CacheEntry *c = getCacheEntry(address);
 
 	if (c)
@@ -214,10 +229,12 @@ int FSCache::unpin(uint32_t address)
 */
 CacheEntry* FSCache::cachePage(uint32_t address)
 {
+    address += CODALFS_OFFSET;
+
 	CacheEntry *lru = NULL;
 
 	// Ensure the page is not already in the cache. If so, then nothing to do...
-	lru = getCacheEntry(address);
+	lru = getCacheEntry(address - CODALFS_OFFSET); // todo: check offset
 	if (lru)
 		return lru;
 
@@ -257,6 +274,8 @@ CacheEntry* FSCache::cachePage(uint32_t address)
 */
 CacheEntry *FSCache::getCacheEntry(uint32_t address)
 {
+    address += CODALFS_OFFSET;
+
 	for (int i = 0; i < cacheSize; i++)
 	{
 		if (cache[i].address == address && cache[i].page)

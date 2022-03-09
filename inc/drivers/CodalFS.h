@@ -148,6 +148,21 @@ namespace codal
 		//Write through cache to optimize FLASH operations
 	public:
 		FSCache cache;
+
+        /**
+        * Initialize the flash storage system
+        *
+        * The file system is located dynamically, based on where the program code
+        * and code data finishes. This avoids having to allocate a fixed flash
+        * region for builds even without CodalFS.
+        *
+        * This method checks if the file system already exists, and loads it.
+        * If not, it will determines the optimal size of the file system, if necessary, and format the space
+        *
+        * @return DEVICE_OK on success, or an error code.
+        */
+        int init();
+
 	private:
 
 		// Total Number of logical pages available for file data (including the file table)
@@ -167,20 +182,6 @@ namespace codal
 
 		// Chain of open files.
 		FileDescriptor *openFiles;
-
-		/**
-		  * Initialize the flash storage system
-		  *
-		  * The file system is located dynamically, based on where the program code
-		  * and code data finishes. This avoids having to allocate a fixed flash
-		  * region for builds even without CodalFS.
-		  *
-		  * This method checks if the file system already exists, and loads it.
-		  * If not, it will determines the optimal size of the file system, if necessary, and format the space
-		  *
-		  * @return DEVICE_OK on success, or an error code.
-		  */
-		int init();
 
 		/**
 		  * Attempts to detect and load an existing file system.
@@ -546,7 +547,7 @@ namespace codal
         void debug_print_directory(const char * directoryName);
         void debug_print_directory(DirectoryEntry* directory, int levelsDeep);
 
-        const static uint8_t header[2048];
+        const static uint8_t header[];
         };
 
 }
