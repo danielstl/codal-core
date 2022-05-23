@@ -27,6 +27,7 @@ DEALINGS IN THE SOFTWARE.
 #include "NVMController.h"
 #include "FSCache.h"
 #include "CodalCompat.h"
+#include "MicroflashInterface.h"
 
 // Configuration options.
 #define CODALFS_FILENAME_LENGTH        16
@@ -122,6 +123,13 @@ namespace codal
 		FileDescriptor *next;
 	};
 
+        struct FilesystemMetadata {
+            uint32_t pageSize;
+            uint32_t blockSize;
+            uint32_t flashSize;
+            uint32_t webUsbCommandBuffer;
+        };
+
 	/**
 	  * @brief Class definition for the CODAL File system
 	  *
@@ -138,12 +146,13 @@ namespace codal
 	class CodalFS
 	{
 	private:
-
-		// Status flags
+            // Status flags
 		uint32_t status;
 
 		// The interface used for all flash read/writes
 		NVMController &flash;
+
+                MicroflashInterface &microflash;
 
 		//Write through cache to optimize FLASH operations
 	public:
@@ -163,7 +172,7 @@ namespace codal
         */
         int init();
 
-	private:
+    private:
 
 		// Total Number of logical pages available for file data (including the file table)
 		int    fileSystemSize;
@@ -369,7 +378,7 @@ namespace codal
 		/**
 		  * Constructor. Creates an instance of a CodalFS.
 		  */
-		CodalFS(NVMController &nav, uint32_t blockSize);
+		CodalFS(NVMController &nav, MicroflashInterface &microflash, uint32_t blockSize);
 
 		/**
 		  * Open a new file, and obtain a new file handle (int) to
@@ -547,7 +556,7 @@ namespace codal
         void debug_print_directory(const char * directoryName);
         void debug_print_directory(DirectoryEntry* directory, int levelsDeep);
 
-        const static uint8_t header[];
+        const static uint8_t header[4000];
         };
 
 }

@@ -89,6 +89,10 @@ namespace codal
             return DEVICE_NOT_IMPLEMENTED;
         }
 
+        virtual int remount() {
+            return DEVICE_NOT_SUPPORTED;
+        }
+
     };
 }
 
