@@ -26,7 +26,7 @@ DEALINGS IN THE SOFTWARE.
 #define WEBUSB_NO_OP 0x00
 #define WEBUSB_OP_PUSH_PATCH 0x01
 #define WEBUSB_OP_REMOUNT 0x02
-#define WEBUSB_OP_PRINT_MESSAGE 0x03
+#define WEBUSB_OP_ERASE_PAGE 0x03
 #define WEBUSB_OP_FORMAT_FS 0x04
 #define WEBUSB_OP_RESPONSE_SUCCESS 0xFF
 
@@ -43,7 +43,7 @@ uint32_t u8_to_u32(const uint8_t *bytes)
     return u32;
 }
 
-uint16_t u8_to_u16(const uint8_t *bytes)
+static uint16_t u8_to_u16(const uint8_t *bytes)
 {
     uint16_t u16;
 
@@ -54,7 +54,7 @@ uint16_t u8_to_u16(const uint8_t *bytes)
 
 MicroflashInterface::MicroflashInterface(NVMController &nvm) : nvm(nvm)
 {
-    memset((void *)&webUsbBuffer, 0, sizeof(webUsbBuffer));
+    memset((void *)&webUsbBuffer, 0, WEBUSB_BUFFER_LENGTH);
     webUsbBuffer[0] = WEBUSB_OP_RESPONSE_SUCCESS;
 
     this->status |= DEVICE_COMPONENT_STATUS_IDLE_TICK;
@@ -71,6 +71,7 @@ static void handleCommand(void *interface)
 
     if (cmd == WEBUSB_NO_OP || cmd == WEBUSB_OP_RESPONSE_SUCCESS)
     {
+        handlingCommand = false;
         return; // not modified / no-op
     }
 
@@ -106,32 +107,32 @@ static void handleCommand(void *interface)
             patchLength = 250; // todo handle better?
         }
 
-        auto wordAlignedPatchPos = patchPos - (patchPos % 4 == 0 ? 0 : (patchPos % 4));
+        auto alignedStart = patchPos - ((patchPos % 4) == 0 ? 0 : (patchPos % 4));
+        auto end = patchPos + patchLength;
+        auto alignedEnd = end + (end % 4 == 0 ? 0 : end % 4);
 
-        auto patchPosOffset = patchPos - wordAlignedPatchPos;
+        auto alignedLength = alignedEnd - alignedStart;
 
-        auto fullLength = (patchPosOffset + patchLength);
+        auto posOffset = patchPos - alignedStart;
 
-        auto wordAlignedPatchLength = fullLength + (4 - (fullLength % 4));
-
-        auto *wordAlignedData = new uint8_t[wordAlignedPatchLength];
+        auto *wordAlignedData = new uint8_t[alignedLength];
 
 #if WEBUSB_DEBUG
-        DMESG("word aligned pos %d word aligned len %d", wordAlignedPatchPos,
-              wordAlignedPatchLength);
-        DMESG("pos with offset %d l %d", wordAlignedPatchPos + CODALFS_OFFSET, fullLength);
+        DMESG("word aligned pos %d word aligned len %d", alignedStart,
+              alignedLength);
+        DMESG("pos with offset %d l %d", alignedStart + CODALFS_OFFSET, alignedLength);
 #endif
 
-        CodalFS::defaultFileSystem->cache.read(wordAlignedPatchPos, wordAlignedData,
-                                               wordAlignedPatchLength);
+        CodalFS::defaultFileSystem->cache.read(alignedStart, wordAlignedData,
+                                               alignedLength);
 
         for (auto i = 0; i < patchLength; i++)
         {
-            wordAlignedData[patchPosOffset + i] = webUsbBuffer[i + 6];
+            wordAlignedData[posOffset + i] = webUsbBuffer[i + 6];
         }
 
-        CodalFS::defaultFileSystem->cache.write(wordAlignedPatchPos, wordAlignedData,
-                                                wordAlignedPatchLength);
+        CodalFS::defaultFileSystem->cache.write(alignedStart, wordAlignedData,
+                                                alignedLength);
 #if WEBUSB_DEBUG
         DMESG("Applied patch!");
 #endif
@@ -143,9 +144,17 @@ static void handleCommand(void *interface)
         DMESG("Remounted!");
 #endif
     }
-    else if (cmd == WEBUSB_OP_PRINT_MESSAGE)
+    else if (cmd == WEBUSB_OP_ERASE_PAGE)
     {
-        DMESG("%s", webUsbBuffer[1]);
+        uint32_t clearPos = u8_to_u32((uint8_t *)(webUsbBuffer + 1));
+
+        //CodalFS::defaultFileSystem->cache.erase(clearPos);
+        CodalFS::defaultFileSystem->cache.clear();
+        self->nvm.erase(clearPos + CODALFS_OFFSET);
+
+#if WEBUSB_DEBUG
+        DMESG("Cleared page %d!", clearPos);
+#endif
     }
     else if (cmd == WEBUSB_OP_FORMAT_FS)
     {

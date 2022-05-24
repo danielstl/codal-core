@@ -21,6 +21,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef CODAL_MICROFLASHINTERFACE_H
 #define CODAL_MICROFLASHINTERFACE_H
 
+#define WEBUSB_BUFFER_LENGTH 256
+
 #include "CodalDevice.h"
 #include "NVMController.h"
 
@@ -33,7 +35,7 @@ private:
 public:
     MicroflashInterface(NVMController &nvm);
 
-    volatile uint8_t webUsbBuffer[256];
+    volatile uint8_t webUsbBuffer[WEBUSB_BUFFER_LENGTH];
 
     void idleCallback() override;
 
